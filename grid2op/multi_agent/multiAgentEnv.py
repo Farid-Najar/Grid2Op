@@ -158,12 +158,74 @@ class MultiAgentEnv(RandomObject):
         
         
     def reset(self) -> MADict:
-        self._cent_env.reset()
-        self._update_observations(_update_state=False)
+        self._cent_observation = self._cent_env.reset()
+        self._update_observations()
         return self.observations
     
+    def _handle_illegal_action(self, reason):
+        
+        for a in self.agents:
+            self.info[a]['action_is_illegal'] = True
+            self.info[a]['reason_illegal'] = reason
+
+    def _handle_ambiguous_action(self, except_tmp):
+        
+        for a in self.agents:
+            self.info[a]['is_ambiguous'] = True
+            self.info[a]['ambiguous_except_tmp'] = except_tmp
+
+    def _build_global_action(self, action : ActionProfile, order : list):
+        
+        self.global_action = self._cent_env.action_space({})
+        proposed_action = self.global_action.copy()
+        
+        for agent in order:
+            converted_action = action[agent] # TODO should be converted into grid2op global action
+            proposed_action += converted_action
+
+        is_legal, reason = self._cent_env._game_rules(action=proposed_action, env=self._cent_env)
+        if not is_legal:
+            self._handle_illegal_action(reason)
+            
+        ambiguous, except_tmp = proposed_action.is_ambiguous()
+        if ambiguous:
+            self._handle_ambiguous_action(except_tmp)
+            
+        if is_legal and not ambiguous :
+            # If the proposed action is valid, we adopt it
+            #Otherwise, the global action stays unchanged
+            self.global_action = proposed_action.copy()
+            
     def step(self, action : ActionProfile) -> Tuple[MADict, MADict, MADict, MADict]:
-        raise NotImplementedError()
+        """_summary_
+
+        Parameters
+        ----------
+        action : ActionProfile
+            _description_
+
+        Returns
+        -------
+        Tuple[MADict, MADict, MADict, MADict]
+            _description_
+        """
+        
+        order = self.select_agent.get_order(new_order=True)
+        self._build_global_action(action, order)
+
+        self._cent_observation, reward, done, info = self._cent_env.step(self.global_action)
+        self._dispatch_reward_done_info(reward, done, info)
+
+        self._update_observations()
+
+        return self.observations, self.rewards, self.dones, self.info 
+    
+    def _dispatch_reward_done_info(self, reward, done, info):
+        for agent in self.agents:
+            self.rewards[agent] = reward
+            self.dones[agent] = done
+            self.info[agent].update(info)
+        
     
     def _build_subgrids(self):
         """_summary_ #TODO
@@ -173,17 +235,17 @@ class MultiAgentEnv(RandomObject):
             'action' : dict(),
             'observation' : dict()
         }
-        for agent_nm in self.agents : 
+        for agent_name in self.agents : 
             # action space
-            self._build_agent_domain(agent_nm, self._action_domains[agent_nm])
-            subgridcls = self._build_subgrid_cls_from_domain(self._action_domains[agent_nm])
-            self._subgrids_cls['action'][agent_nm] = subgridcls 
+            self._build_agent_domain(agent_name, self._action_domains[agent_name])
+            subgridcls = self._build_subgrid_cls_from_domain(self._action_domains[agent_name])
+            self._subgrids_cls['action'][agent_name] = subgridcls 
             
             # observation space
             if self._observation_domains is not None:
-                self._build_agent_domain(agent_nm, self._observation_domains[agent_nm])
-                subgridcls = self._build_subgrid_cls_from_domain(self._observation_domains[agent_nm])
-                self._subgrids_cls['observation'][agent_nm] = subgridcls
+                self._build_agent_domain(agent_name, self._observation_domains[agent_name])
+                subgridcls = self._build_subgrid_cls_from_domain(self._observation_domains[agent_name])
+                self._subgrids_cls['observation'][agent_name] = subgridcls
         
     def _build_agent_domain(self, agent_nm, domain):
         """_summary_#TODO
@@ -511,12 +573,9 @@ class MultiAgentEnv(RandomObject):
                 "This environment is not initialized. You cannot retrieve its observation."
             )
         
-        # TODO BEN: why do you do that this way ? Why not reusing the centralized observation after the "self._cent_env.step(...)" ??
-        # TODO BEN: discuss
         for agent in self.agents:
-            self.observations[agent] = self.observation_spaces[agent](
-                env=self._cent_env, _update_state=_update_state
-            )
+            self.observations[agent] = self._cent_observation.copy()
+    
     
     def _verify_domains(self, domains : MADict) :
         """It verifies if substation ids are valid
