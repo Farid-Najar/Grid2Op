@@ -149,6 +149,9 @@ class MultiAgentEnv(RandomObject):
                 self.agents, [None for _ in range(self.num_agents)]
             )
         )
+        self._cent_observation = None
+        self.__closed = False
+        
         self.agent_order = AgentSelector(self.agents, agent_order_fn)
         self.action_spaces = dict()
         self.observation_spaces = dict()
@@ -566,9 +569,9 @@ class MultiAgentEnv(RandomObject):
         #for agent in self.agents:
         #    self.observations[agent] = observation.copy()
         
-        if self._cent_env.__closed:
+        if self.__closed:
             raise EnvError("This environment is closed. You cannot use it anymore.")
-        if not self.__is_init:
+        if self._cent_observation is None:
             raise EnvError(
                 "This environment is not initialized. You cannot retrieve its observation."
             )
@@ -635,3 +638,12 @@ class MultiAgentEnv(RandomObject):
         """
         # observations are updated in reset and step methods
         return self.observations[agent]
+
+    def close(self):
+        self.__closed = True
+        try:
+            self._cent_env.close()
+            print("MAEnv closed with success !")
+        except Exception as e:
+            print("Something went wrong :")
+            print(e)
