@@ -149,6 +149,17 @@ class MultiAgentEnv(RandomObject):
                 self.agents, [None for _ in range(self.num_agents)]
             )
         )
+        self.done = dict(
+            zip(
+                self.agents, [None for _ in range(self.num_agents)]
+            )
+        )
+        self.info = dict(
+            zip(
+                self.agents, [{} for _ in range(self.num_agents)]
+            )
+        )
+        
         self._cent_observation = None
         self.__closed = False
         
@@ -221,12 +232,12 @@ class MultiAgentEnv(RandomObject):
 
         self._update_observations()
 
-        return self.observations, self.rewards, self.dones, self.info 
+        return self.observations, self.rewards, self.done, self.info 
     
     def _dispatch_reward_done_info(self, reward, done, info):
         for agent in self.agents:
             self.rewards[agent] = reward
-            self.dones[agent] = done
+            self.done[agent] = done
             self.info[agent].update(info)
         
     

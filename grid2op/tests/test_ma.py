@@ -167,7 +167,8 @@ class MATesterGlobalObs(unittest.TestCase):
         self.check_objects_to_subid(ma_env, action_domains)
         self.check_connections(ma_env, action_domains)
         
-        self.check_reset(ma_env)
+        self.check_update_observations(ma_env)
+        self.check_dispatch_reward_done_info(ma_env)
         self.run_in_env(ma_env)
         
         assert (ma_env._subgrids_cls['action']['agent_0'].interco_to_lineid == np.array([15,16,17])).all()
@@ -218,8 +219,9 @@ class MATesterGlobalObs(unittest.TestCase):
         self.check_objects_to_subid(ma_env, action_domains)
         self.check_connections(ma_env, action_domains)
 
-        self.check_reset(ma_env)
+        self.check_update_observations(ma_env)
         self.run_in_env(ma_env)
+        self.check_dispatch_reward_done_info(ma_env)
         
     
     def test_build_subgrid_obj3(self):    
@@ -240,10 +242,9 @@ class MATesterGlobalObs(unittest.TestCase):
             self.check_objects_to_subid(ma_env, action_domains)
             self.check_connections(ma_env, action_domains)
 
-            self.check_reset(ma_env)
-            # TODO BEN: and check more carefully the things, it's not enough at the moment
-        
-    
+            self.check_update_observations(ma_env)
+            self.check_dispatch_reward_done_info(ma_env)
+            
     
     def check_n_objects(self, ma_env, domain, space = 'action', add_msg = ""):
         # TODO comment  
@@ -356,11 +357,22 @@ class MATesterGlobalObs(unittest.TestCase):
                         ma_env._subgrids_cls[space][agent].sub_orig_ids
                     ]).all()
             
-    def check_reset(self, ma_env):
+    def check_update_observations(self, ma_env):
         ma_env.reset()
         for agent in ma_env.agents:
             assert ma_env.observations[agent] is not ma_env._cent_observation
             assert ma_env.observations[agent] == ma_env._cent_observation
+            
+    def check_dispatch_reward_done_info(self, ma_env):
+        reward = 42.
+        done = False
+        info = {'test' : True}
+        ma_env._dispatch_reward_done_info(reward, done, info)
+        
+        for agent in ma_env.agents:
+            assert ma_env.rewards[agent] == reward
+            assert ma_env.done[agent] == done
+            assert ma_env.info[agent] == info
             
     def run_in_env(self, ma_env):
         #TODO
