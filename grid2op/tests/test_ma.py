@@ -379,11 +379,6 @@ class MATesterGlobalObs(unittest.TestCase):
         pass
     
     
-    
-    
-    # TODO BEN: use a function to check all that more generally (eg the one you coded for test_build_subgrid_obj4)
-    # TODO BEN and this generic function you test EVERYTHING, not half of it.
-    # TODO BEN by everything I mean really every class attributes
         
 if __name__ == "__main__":
     unittest.main()
