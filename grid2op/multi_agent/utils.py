@@ -29,7 +29,7 @@ class AgentSelector:
     def __init__(self, agents : list, agent_order_fn, *args, **kwargs):
         self.agents = agents
         if agent_order_fn is None:
-            agent_order_fn = lambda x : x
+            agent_order_fn = lambda x : sorted(list(x))
         self.agent_order_fn = agent_order_fn
         self.reinit(*args, **kwargs)
 
