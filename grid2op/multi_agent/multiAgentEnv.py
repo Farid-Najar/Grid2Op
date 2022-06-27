@@ -193,6 +193,8 @@ class MultiAgentEnv(RandomObject):
         self.global_action = self._cent_env.action_space({})
         proposed_action = self.global_action.copy()
         
+        #local2global here TODO
+        
         for agent in order:
             converted_action = action[agent] # TODO should be converted into grid2op global action
             proposed_action += converted_action
