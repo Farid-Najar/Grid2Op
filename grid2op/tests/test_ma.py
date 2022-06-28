@@ -245,15 +245,163 @@ class MATesterGlobalObs(unittest.TestCase):
             self.check_update_observations(ma_env)
             self.check_dispatch_reward_done_info(ma_env)
             
-    def test_local_action_to_global_set_bus(self):
-        # TODO
-        local_act = self.action_spaces[agent]({
-            'set_bus' : ()
-        })
-        global_act = self.ma_env._local_action_to_global(local_act)
-        ref_global_act = #TODO 
-        assert global_act.set_bus == ref_global_act.set_bus
-        assert global_act._modif_set_bus == ref_global_act._modif_set_bus
+    def test_local_action_to_global_set_bus(self, ma_env):
+        # TODO Done
+        np.random.seed(0)
+        for agent in ma_env.agents:
+            # Test for loads
+            local_load_id = np.random.randint(0, ma_env.action_spaces[agent].n_load)
+            local_act = ma_env.action_spaces[agent]({
+                'set_bus' : 
+                    (ma_env.ma_env.action_spaces[agent].load_to_pos_topo_vect[local_load_id], 2)
+            })
+            global_act = self.ma_env._local_action_to_global(local_act)
+            global_load_id = ma_env.action_spaces[agent].load_orig_ids[local_load_id]
+            ref_global_act = ma_env._cent_env.action_space({
+                'set_bus' : 
+                    (ma_env.ma_env.action_spaces[agent].load_to_pos_topo_vect[global_load_id], 2)
+            })
+            assert global_act.set_bus == ref_global_act.set_bus
+            assert global_act._modif_set_bus == ref_global_act._modif_set_bus
+            
+            # Test for gens
+            local_gen_id = np.random.randint(0, ma_env.action_spaces[agent].n_gen)
+            local_act = ma_env.action_spaces[agent]({
+                'set_bus' : 
+                    (ma_env.ma_env.action_spaces[agent].gen_to_pos_topo_vect[local_gen_id], 2)
+            })
+            global_act = self.ma_env._local_action_to_global(local_act)
+            global_gen_id = ma_env.action_spaces[agent].gen_orig_ids[local_gen_id]
+            ref_global_act = ma_env._cent_env.action_space({
+                'set_bus' : 
+                    (ma_env.ma_env.action_spaces[agent].gen_to_pos_topo_vect[global_gen_id], 2)
+            })
+            assert global_act.set_bus == ref_global_act.set_bus
+            assert global_act._modif_set_bus == ref_global_act._modif_set_bus
+            
+            # Test for line_ors
+            local_line_or_id = np.random.randint(0, ma_env.action_spaces[agent].n_line)
+            local_act = ma_env.action_spaces[agent]({
+                'set_bus' : 
+                    (ma_env.ma_env.action_spaces[agent].line_or_to_pos_topo_vect[local_line_or_id], 2)
+            })
+            global_act = self.ma_env._local_action_to_global(local_act)
+            global_line_or_id = ma_env.action_spaces[agent].line_orig_ids[local_line_or_id]
+            ref_global_act = ma_env._cent_env.action_space({
+                'set_bus' : 
+                    (ma_env.ma_env.action_spaces[agent].line_or_to_pos_topo_vect[global_line_or_id], 2)
+            })
+            assert global_act.set_bus == ref_global_act.set_bus
+            assert global_act._modif_set_bus == ref_global_act._modif_set_bus
+            
+            # Test for line_exs
+            local_line_ex_id = np.random.randint(0, ma_env.action_spaces[agent].n_line)
+            local_act = ma_env.action_spaces[agent]({
+                'set_bus' : 
+                    (ma_env.ma_env.action_spaces[agent].line_ex_to_pos_topo_vect[local_line_ex_id], 2)
+            })
+            global_act = self.ma_env._local_action_to_global(local_act)
+            global_line_ex_id = ma_env.action_spaces[agent].line_ex_orig_ids[local_line_ex_id]
+            ref_global_act = ma_env._cent_env.action_space({
+                'set_bus' : 
+                    (ma_env.ma_env.action_spaces[agent].line_ex_to_pos_topo_vect[global_line_ex_id], 2)
+            })
+            assert global_act.set_bus == ref_global_act.set_bus
+            assert global_act._modif_set_bus == ref_global_act._modif_set_bus
+            
+            # Test for storages
+            local_storage_id = np.random.randint(0, ma_env.action_spaces[agent].n_storage)
+            local_act = ma_env.action_spaces[agent]({
+                'set_bus' : 
+                    (ma_env.ma_env.action_spaces[agent].storage_to_pos_topo_vect[local_storage_id], 2)
+            })
+            global_act = self.ma_env._local_action_to_global(local_act)
+            global_storage_id = ma_env.action_spaces[agent].storage_orig_ids[local_storage_id]
+            ref_global_act = ma_env._cent_env.action_space({
+                'set_bus' : 
+                    (ma_env.ma_env.action_spaces[agent].storage_to_pos_topo_vect[global_storage_id], 2)
+            })
+            assert global_act.set_bus == ref_global_act.set_bus
+            assert global_act._modif_set_bus == ref_global_act._modif_set_bus
+            
+    def test_local_action_to_global_change_bus(self, ma_env):
+        # TODO Done
+        np.random.seed(0)
+        for agent in ma_env.agents:
+            # Test for loads
+            local_load_id = np.random.randint(0, ma_env.action_spaces[agent].n_load)
+            local_act = ma_env.action_spaces[agent]({
+                'change_bus' : 
+                    ma_env.ma_env.action_spaces[agent].load_to_pos_topo_vect[local_load_id]
+            })
+            global_act = self.ma_env._local_action_to_global(local_act)
+            global_load_id = ma_env.action_spaces[agent].load_orig_ids[local_load_id]
+            ref_global_act = ma_env._cent_env.action_space({
+                'change_bus' : 
+                    ma_env.ma_env.action_spaces[agent].load_to_pos_topo_vect[global_load_id]
+            })
+            assert global_act.change_bus == ref_global_act.change_bus
+            assert global_act._modif_change_bus == ref_global_act._modif_change_bus
+            
+            # Test for gens
+            local_gen_id = np.random.randint(0, ma_env.action_spaces[agent].n_gen)
+            local_act = ma_env.action_spaces[agent]({
+                'change_bus' : 
+                    ma_env.ma_env.action_spaces[agent].gen_to_pos_topo_vect[local_gen_id]
+            })
+            global_act = self.ma_env._local_action_to_global(local_act)
+            global_gen_id = ma_env.action_spaces[agent].gen_orig_ids[local_gen_id]
+            ref_global_act = ma_env._cent_env.action_space({
+                'change_bus' : 
+                    ma_env.ma_env.action_spaces[agent].gen_to_pos_topo_vect[global_gen_id]
+            })
+            assert global_act.change_bus == ref_global_act.change_bus
+            assert global_act._modif_change_bus == ref_global_act._modif_change_bus
+            
+            # Test for line_ors
+            local_line_or_id = np.random.randint(0, ma_env.action_spaces[agent].n_line)
+            local_act = ma_env.action_spaces[agent]({
+                'change_bus' : 
+                    ma_env.ma_env.action_spaces[agent].line_or_to_pos_topo_vect[local_line_or_id]
+            })
+            global_act = self.ma_env._local_action_to_global(local_act)
+            global_line_or_id = ma_env.action_spaces[agent].line_orig_ids[local_line_or_id]
+            ref_global_act = ma_env._cent_env.action_space({
+                'change_bus' : 
+                    ma_env.ma_env.action_spaces[agent].line_or_to_pos_topo_vect[global_line_or_id]
+            })
+            assert global_act.change_bus == ref_global_act.change_bus
+            assert global_act._modif_change_bus == ref_global_act._modif_change_bus
+            
+            # Test for line_exs
+            local_line_ex_id = np.random.randint(0, ma_env.action_spaces[agent].n_line)
+            local_act = ma_env.action_spaces[agent]({
+                'change_bus' : 
+                    ma_env.ma_env.action_spaces[agent].line_ex_to_pos_topo_vect[local_line_ex_id]
+            })
+            global_act = self.ma_env._local_action_to_global(local_act)
+            global_line_ex_id = ma_env.action_spaces[agent].line_ex_orig_ids[local_line_ex_id]
+            ref_global_act = ma_env._cent_env.action_space({
+                'change_bus' : 
+                    ma_env.ma_env.action_spaces[agent].line_ex_to_pos_topo_vect[global_line_ex_id]
+            })
+            assert global_act.change_bus == ref_global_act.change_bus
+            assert global_act._modif_change_bus == ref_global_act._modif_change_bus
+            
+            # Test for storages
+            local_storage_id = np.random.randint(0, ma_env.action_spaces[agent].n_storage)
+            local_act = ma_env.action_spaces[agent]({
+                'change_bus' : 
+                    ma_env.ma_env.action_spaces[agent].storage_to_pos_topo_vect[local_storage_id]
+            })
+            global_act = self.ma_env._local_action_to_global(local_act)
+            global_storage_id = ma_env.action_spaces[agent].storage_orig_ids[local_storage_id]
+            ref_global_act = ma_env._cent_env.action_space({
+                'change_bus' : 
+                    ma_env.ma_env.action_spaces[agent].storage_to_pos_topo_vect[global_storage_id]
+            })
+            assert global_act.change_bus == ref_global_act.change_bus
+            assert global_act._modif_change_bus == ref_global_act._modif_change_bus
         
     #TODO other actions 
     # V0
