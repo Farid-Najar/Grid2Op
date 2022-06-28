@@ -245,7 +245,31 @@ class MATesterGlobalObs(unittest.TestCase):
             self.check_update_observations(ma_env)
             self.check_dispatch_reward_done_info(ma_env)
             
+    def test_local_action_to_global_set_bus(self):
+        # TODO
+        local_act = self.action_spaces[agent]({
+            'set_bus' : ()
+        })
+        global_act = self.ma_env._local_action_to_global(local_act)
+        ref_global_act = #TODO 
+        assert global_act.set_bus == ref_global_act.set_bus
+        assert global_act._modif_set_bus == ref_global_act._modif_set_bus
+        
+    #TODO other actions 
+    # V0
+    # change_bus,
+    # redispatch
+    # curtail
+    # change_line_status
+    # set_line_status
+    # set_storage
     
+    # TODO v0.1
+    # Topo actions on interconnections
+    
+    # TODO v0.2
+    # change_interco_status
+    # set_...
     def check_n_objects(self, ma_env, domain, space = 'action', add_msg = ""):
         # TODO comment  
         # Only for two agents

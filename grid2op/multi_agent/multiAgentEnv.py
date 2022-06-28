@@ -12,6 +12,7 @@ from typing import Optional, Tuple, Union
 import warnings
 import numpy as np
 import re
+from getting_started.grid2op.Action.BaseAction import BaseAction
 from grid2op.Environment.Environment import Environment
 
 import grid2op
@@ -24,7 +25,7 @@ from grid2op.Action import ActionSpace
 from grid2op.multi_agent.subGridObjects import SubGridObjects
 from grid2op.operator_attention import LinearAttentionBudget
 from grid2op.multi_agent.utils import AgentSelector, random_order  
-from grid2op.multi_agent.ma_typing import ActionProfile, AgentID, MADict
+from grid2op.multi_agent.ma_typing import ActionProfile, AgentID, LocalAction, MADict
 from grid2op.multi_agent.multi_agentExceptions import *
 
 import pdb
@@ -187,6 +188,24 @@ class MultiAgentEnv(RandomObject):
         for a in self.agents:
             self.info[a]['is_ambiguous'] = True
             self.info[a]['ambiguous_except_tmp'] = except_tmp
+            
+    def _local_action_to_global(self, local_action : LocalAction) -> BaseAction :
+        # TODO
+        pass
+        
+        # V0
+        # change_bus,
+        # redispatch
+        # curtail
+        # change_line_status
+        # set_line_status
+        # set_storage
+        
+        # V inf
+        # injection
+        # hazards
+        # maintenance
+        # alarm
 
     def _build_global_action(self, action : ActionProfile, order : list):
         
