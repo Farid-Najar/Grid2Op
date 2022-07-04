@@ -10,6 +10,8 @@ from typing import Any, Optional, Dict, Tuple
 from getting_started.grid2op.Observation.baseObservation import BaseObservation
 from getting_started.grid2op.Observation.observationSpace import ObservationSpace
 from grid2op.Action.ActionSpace import ActionSpace
+from grid2op.Agent.baseAgent import BaseAgent
+from grid2op.multi_agent.multiAgentEnv import MultiAgentEnv
 
 from grid2op.Action.BaseAction import BaseAction
 
@@ -22,5 +24,6 @@ LocalAction = BaseAction
 LocalObservation = BaseObservation
 
 ActionProfile = Dict[AgentID, BaseAction]
-MADict = Dict[AgentID, Any]  # TODO slit it in more things to be more precise
-# this is close to useless this way
+MAAgents = Dict[AgentID, BaseAgent]
+MADict = Dict[AgentID, Any]  
+MAEnv = MultiAgentEnv
