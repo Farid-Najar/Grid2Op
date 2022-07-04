@@ -32,15 +32,12 @@ class MATesterGlobalObs(unittest.TestCase):
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore")
             
-            custom_params = Parameters()
-            custom_params.MAX_SUB_CHANGED = len(self.action_domains.keys())
-            custom_params.MAX_LINE_STATUS_CHANGED = len(self.action_domains.keys())
-            
-            self.env = make("educ_case14_storage", test=True, param = custom_params,
+            self.env = make("educ_case14_storage", test=True,
                             action_class=PlayableAction, _add_to_name="test_ma")
 
         
-        self.ma_env = MultiAgentEnv(self.env, self.action_domains)
+            self.ma_env = MultiAgentEnv(self.env, self.action_domains)
+            
         return super().setUp()
     
     def tearDown(self) -> None:
@@ -60,7 +57,9 @@ class MATesterGlobalObs(unittest.TestCase):
         }
         # above action domain should raise an error: "0" is not an iterable !
         with self.assertRaises(DomainException) as de:
-            MultiAgentEnv(self.env, action_domains, _add_to_name="test_verify_domains_0")
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore")
+                MultiAgentEnv(self.env, action_domains, _add_to_name="test_verify_domains_0")
         
         action_domains = {
             'agent_0' : [0],
@@ -68,7 +67,9 @@ class MATesterGlobalObs(unittest.TestCase):
         }
         # above action domain should raise an error: substations are not fully allocated !
         with self.assertRaises(DomainException) as de:
-            MultiAgentEnv(self.env, action_domains, _add_to_name="test_verify_domains_1")
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore")
+                MultiAgentEnv(self.env, action_domains, _add_to_name="test_verify_domains_1")
             
         action_domains = {
             'agent_0' : [],
@@ -76,7 +77,9 @@ class MATesterGlobalObs(unittest.TestCase):
         }
         # above action domain should raise an error: agents must have at least one substation !
         with self.assertRaises(DomainException) as de:
-            MultiAgentEnv(self.env, action_domains, _add_to_name="test_verify_domains_2")
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore")
+                MultiAgentEnv(self.env, action_domains, _add_to_name="test_verify_domains_2")
             
         action_domains = {
             'agent_0' : [0,1,6,3, 4],
@@ -84,7 +87,9 @@ class MATesterGlobalObs(unittest.TestCase):
         }
         # this domain is valid even if it is not connected
         try:
-            MultiAgentEnv(self.env, action_domains, _add_to_name="test_verify_domains_3")
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore")
+                MultiAgentEnv(self.env, action_domains, _add_to_name="test_verify_domains_3")
         except DomainException:
             self.fail("action_domains raised Domain Exception unexpectedly!")
             
@@ -94,19 +99,27 @@ class MATesterGlobalObs(unittest.TestCase):
         }
         # this domain is not a partition ; it should raise an error
         with self.assertRaises(DomainException) as de:
-            MultiAgentEnv(self.env, action_domains, _add_to_name="test_verify_domains_4")
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore")
+                MultiAgentEnv(self.env, action_domains, _add_to_name="test_verify_domains_4")
         
     
     def test_build_subgrids_action_domains(self):
         # Simple test to verify if action domains are correctly
         # taken into accaount by the env
-        self.ma_env = MultiAgentEnv(self.env, self.action_domains, _add_to_name="test_build_subgrids_action_domains")
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore")
+            self.ma_env = MultiAgentEnv(self.env, self.action_domains, _add_to_name="test_build_subgrids_action_domains")
+        
         assert self.ma_env._action_domains['agent_0']['sub_id'] == self.action_domains['agent_0']
         assert self.ma_env._action_domains['agent_1']['sub_id'] == self.action_domains['agent_1']
     
     def test_masks(self):
         # We compare the masks with known values for every agent
-        self.ma_env = MultiAgentEnv(self.env, self.action_domains, _add_to_name="test_masks")
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore")
+            self.ma_env = MultiAgentEnv(self.env, self.action_domains, _add_to_name="test_masks")
+            
         mask_load_agent0 = np.array([True,  True,  True,  True, False, False, False, 
                             False, False, False, False])
         # We compare the load masks with known values for every agent
@@ -142,7 +155,9 @@ class MATesterGlobalObs(unittest.TestCase):
         
     def test_interco(self):
         
-        self.ma_env = MultiAgentEnv(self.env, self.action_domains, _add_to_name="test_interco")
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore")
+            self.ma_env = MultiAgentEnv(self.env, self.action_domains, _add_to_name="test_interco")
         # Tests on interconnections with known values for every agent
         mask_interco_ref = np.array([False, False, False, False, False, False, False, False, False,
                                 False, False, False, False, False, False,  True,  True,  True,
@@ -176,7 +191,9 @@ class MATesterGlobalObs(unittest.TestCase):
             'agent_0' : [0,1,2,3, 4],
             'agent_1' : [5,6,7,8,9,10,11,12,13]
         }
-        ma_env = MultiAgentEnv(self.env, action_domains, _add_to_name="test_build_subgrid_obj")
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore")
+            ma_env = MultiAgentEnv(self.env, action_domains, _add_to_name="test_build_subgrid_obj")
         
         # We compare the number of generators for every agents' subgrids with known values
         assert ma_env._subgrids_cls['action']['agent_0'].n_gen == 3
@@ -227,7 +244,9 @@ class MATesterGlobalObs(unittest.TestCase):
             'test_2_agent_1' : [5, 6, 7, 8, 9],
             
         }
-        ma_env = MultiAgentEnv(self.env, action_domains, _add_to_name="test_build_subgrid_obj2")
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore")
+            ma_env = MultiAgentEnv(self.env, action_domains, _add_to_name="test_build_subgrid_obj2")
         assert ma_env.agents == ['test_2_agent_0', 'test_2_agent_1', 'test_2_agent_2']
         assert ma_env.agents != ['test_2_agent_0', 'test_2_agent_2', 'test_2_agent_1']
         assert ma_env.agent_order == ma_env.agents
@@ -245,8 +264,9 @@ class MATesterGlobalObs(unittest.TestCase):
                 'agent_0' : sub_ids[:pivot],
                 'agent_1' : sub_ids[pivot:],
             }
-            # run redispatch agent on one scenario for 100 timesteps
-            ma_env = MultiAgentEnv(self.env, action_domains, _add_to_name=f"_it_{it}")
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore")
+                ma_env = MultiAgentEnv(self.env, action_domains, _add_to_name=f"_test_build_subgrid_obj3_it_{it}")
             assert ma_env.agents == ['agent_0', 'agent_1']
             assert ma_env.agent_order == ma_env.agents
             self.check_subgrid_consistency(ma_env, action_domains, add_msg=f"error for iter {it}")
@@ -691,6 +711,9 @@ class MATesterGlobalObs(unittest.TestCase):
         # gives the correspondig global action on the same object
         # and they have the same effect.
         
+        # We check if lengths match 
+        assert n == len(orig_ids)
+        
         for local_id in range(n):
             
             local_act = self.ma_env.action_spaces[agent]({})
@@ -974,9 +997,10 @@ class MATesterGlobalObs(unittest.TestCase):
         
         self.ma_env._build_global_action(action, self.ma_env.agents)
         
-        ref_action = self.ma_env._cent_env.action_space({})
+        do_nothing = self.ma_env._cent_env.action_space({})
+        
         # We check if the global action is do nothing
-        assert ref_action == self.ma_env.global_action
+        assert do_nothing == self.ma_env.global_action
         # We check if info is updated
         assert (np.array([
             self.ma_env.info[a]['action_is_illegal']
@@ -997,9 +1021,9 @@ class MATesterGlobalObs(unittest.TestCase):
         
         self.ma_env._build_global_action(action, self.ma_env.agents)
         
-        ref_action = self.ma_env._cent_env.action_space({})
+        do_nothing = self.ma_env._cent_env.action_space({})
         # We check if the global action is do nothing
-        assert ref_action == self.ma_env.global_action
+        assert do_nothing == self.ma_env.global_action
         # We check if info is updated
         assert (np.array([
             self.ma_env.info[a]['is_ambiguous']
@@ -1018,9 +1042,12 @@ class MATesterGlobalObs(unittest.TestCase):
             'agent_1' : [5,6,7,8,9,10,11,12,13]
         }
         space = "action"
-        ma_env = MultiAgentEnv(self.env,
-                               action_domains,
-                               _add_to_name="_test_build_subgrid_obj")
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore")
+            ma_env = MultiAgentEnv(self.env,
+                                   action_domains,
+                                   _add_to_name="_test_action_spaces")
+            
         for agent in ma_env.agents:
             # The action space must have the same dim_topo
             # as its subgrid class
@@ -1036,22 +1063,19 @@ class MATesterGlobalObs(unittest.TestCase):
     def test_step(self):
         
         self.ma_env.seed(0)
-        cum_reward = 0
         self.ma_env.reset()
         for _ in range(10):
             while True:
-                actions = dict(
-                    zip(
-                        self.ma_env.agents, 
-                        [self.ma_env.action_spaces[agent].sample() for agent in self.ma_env.agents]
-                    )
-                )
+                actions = {
+                    agent : self.ma_env.action_spaces[agent].sample()
+                    for agent in self.ma_env.agents
+                }
                 obs, rewards, dones, info = self.ma_env.step(actions)
                 if dones[self.ma_env.agents[0]]:
                     self.ma_env.reset()
                     break
                 
-
+        
         
 if __name__ == "__main__":
     unittest.main()

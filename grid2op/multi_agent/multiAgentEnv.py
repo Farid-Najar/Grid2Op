@@ -6,19 +6,16 @@
 # SPDX-License-Identifier: MPL-2.0
 # This file is part of Grid2Op, Grid2Op a testbed platform to model sequential decision making in power systems.
 
-import os
 import copy
 from typing import Optional, Tuple
 import warnings
 import numpy as np
 from grid2op.Environment.Environment import Environment
 
-import grid2op
 from grid2op.Exceptions.EnvExceptions import EnvError
-from grid2op.Space.GridObjects import GridObjects
+from grid2op.Parameters import Parameters
 from grid2op.Space.RandomObject import RandomObject
 from grid2op.dtypes import dt_bool, dt_int
-from grid2op.Action import ActionSpace
 from grid2op.multi_agent.subGridObjects import SubGridObjects
 from grid2op.Action import BaseAction
 
@@ -26,14 +23,13 @@ from grid2op.multi_agent.ma_typing import ActionProfile, AgentID, LocalAction, L
 from grid2op.multi_agent.multi_agentExceptions import *
 from grid2op.multi_agent.subgridAction import SubGridAction, SubGridActionSpace
 
-import pdb
-
 
 class MultiAgentEnv(RandomObject):
     def __init__(self,
                  env : Environment,
                  action_domains : MADict,
                  observation_domains : MADict = None,
+                 params = None,
                  agent_order_fn = lambda x : x, #TODO BEN
                  illegal_action_pen : float = 0.,
                  ambiguous_action_pen : float = 0.,
@@ -78,10 +74,6 @@ class MultiAgentEnv(RandomObject):
             * rewards (MADict) : 
                 - keys : agents' names
                 - values : agent's reward
-            
-            * _cumulative_rewards (MADict) :
-                - keys : agents' names
-                - values : agent's cumulative reward in the episode
                 
             * observation (MADict) :
                 - keys : agents' names
@@ -120,6 +112,36 @@ class MultiAgentEnv(RandomObject):
         self._action_domains = {k: {"sub_id": copy.deepcopy(v)} for k,v in action_domains.items()}
         self.num_agents = len(action_domains)
         
+        # Updating parameters
+        if params is None:
+            # TODO complete default parameters
+            self.parameters = self._cent_env.parameters
+            self.parameters.MAX_SUB_CHANGED = self.num_agents
+            self.parameters.MAX_LINE_STATUS_CHANGED = self.num_agents
+
+            self._cent_env.change_parameters(self.parameters)
+            
+            warnings.warn("Rules can not be changed in this version.")
+            
+            if copy_env:
+                self._cent_env.reset()
+            else:
+                self._cent_env.reset()
+                warnings.warn("The central env has been reset !")
+            
+            assert self._cent_env.parameters.MAX_LINE_STATUS_CHANGED == self.num_agents
+            
+        else:
+            # TODO MA
+            raise NotImplementedError("Multi-agent parameters are not available yet.")
+            if not isinstance(params, Parameters):
+                raise Grid2OpException(f"Parameters must be of type grid2op.Prameters.Parameters but {type(params)} is given")
+            
+            self.parameters = params
+            self._cent_env.change_parameters(self.parameters)
+
+        
+        
         if observation_domains is not None:
             # user specified an observation domain
             self._is_global_obs : bool = False
@@ -143,11 +165,6 @@ class MultiAgentEnv(RandomObject):
                 self.agents, [0. for _ in range(self.num_agents)]
             )
         )
-        self._cumulative_rewards = dict(
-            zip(
-                self.agents, [0. for _ in range(self.num_agents)]
-            )
-        )
         self.observations = dict(
             zip(
                 self.agents, [None for _ in range(self.num_agents)]
@@ -165,9 +182,6 @@ class MultiAgentEnv(RandomObject):
         )
         
         self._cent_observation = None
-        self.__closed = False
-        self._has_just_been_seeded = False
-        
         
         self.agent_order = self.agents.copy()
         self.action_spaces = dict()
@@ -179,11 +193,6 @@ class MultiAgentEnv(RandomObject):
         
     def reset(self) -> MADict:
         # TODO : done, tested
-        self._cumulative_rewards = dict(
-            zip(
-                self.agents, [0. for _ in range(self.num_agents)]
-            )
-        )
         self._cent_observation = self._cent_env.reset()
         self._update_observations()
         return self.observations
@@ -192,26 +201,29 @@ class MultiAgentEnv(RandomObject):
         
         for a in self.agents:
             self.info[a]['action_is_illegal'] = True
-            self.info[a]['reason_illegal'] = reason
+            self.info[a]['reason_illegal'] = copy.deepcopy(reason)
 
     def _handle_ambiguous_action(self, except_tmp):
         
         for a in self.agents:
             self.info[a]['is_ambiguous'] = True
-            self.info[a]['ambiguous_except_tmp'] = except_tmp
 
     def _build_global_action(self, action : ActionProfile, order : list):
         
+        # The global action is do nothing at the beginning
         self.global_action = self._cent_env.action_space({})
         proposed_action = self.global_action.copy()
         
         for agent in order:
+            # We translate and add local actions one by one
             proposed_action += self._local_action_to_global(action[agent])
 
+        # We check if the resulted action is illegal
         is_legal, reason = self._cent_env._game_rules(action=proposed_action, env=self._cent_env)
         if not is_legal:
             self._handle_illegal_action(reason)
             
+        # We check if the resulted action is ambiguous
         ambiguous, except_tmp = proposed_action.is_ambiguous()
         if ambiguous:
             self._handle_ambiguous_action(except_tmp)
@@ -249,7 +261,6 @@ class MultiAgentEnv(RandomObject):
     def _dispatch_reward_done_info(self, reward, done, info):
         for agent in self.agents:
             self.rewards[agent] = reward
-            self._cumulative_rewards[agent] += reward
             self.done[agent] = done
             self.info[agent].update(copy.deepcopy(info))
     
@@ -305,32 +316,33 @@ class MultiAgentEnv(RandomObject):
         return new_label[tmp_]
     
     def seed(self, seed):
-        
+
         seed_init = seed
-        
+
         max_seed = np.iinfo(dt_int).max  # 2**32 - 1
-        
+
         super().seed(seed)
-        
+
         seed = self.space_prng.randint(max_seed)
         seed_cent_env = self._cent_env.seed(seed)
-        
+
         seed_observation_space = []
         seed_action_space = []
-        
+
         for agent in sorted(self.agents):
             seed = self.space_prng.randint(max_seed)
             seed_observation_space.append(self.observation_spaces[agent].seed(seed))
-            
+
             seed = self.space_prng.randint(max_seed)
             seed_action_space.append(self.action_spaces[agent].seed(seed))
-            
+
         return (
             seed_init,
             seed_cent_env,
             seed_observation_space,
             seed_action_space
         )
+        
     
     def _local_action_to_global(self, local_action : LocalAction) -> BaseAction :
         # Empty global action
@@ -613,25 +625,29 @@ class MultiAgentEnv(RandomObject):
         tmp_subgrid.mask_orig_pos_topo_vect[cent_env_cls.line_or_pos_topo_vect[tmp_subgrid.mask_interco][tmp_subgrid.interco_is_origin]] = True
         tmp_subgrid.mask_orig_pos_topo_vect[cent_env_cls.line_ex_pos_topo_vect[tmp_subgrid.mask_interco][~tmp_subgrid.interco_is_origin]] = True
         
-        extra_name = self._get_cls_name_from_domain(domain)
+        extra_name = self._get_cls_name_from_domain()
         res_cls = SubGridObjects.init_grid(gridobj=tmp_subgrid, extra_name=extra_name)
-
         # make sure the class is consistent
         res_cls.assert_grid_correct_cls()
         return res_cls
     
     def _get_cls_name_from_domain(self, domain=None, agent_name=None):
+        extra_name = ""
         if domain is not None and agent_name is None:
             extra_name = domain["agent_name"]
         elif agent_name is not None and domain is None:
             extra_name = agent_name
-        elif agent_name is None and domain is None:
-            raise EnvError("give at least agent_name or domain")
-        else:
+        # elif agent_name is None and domain is None:
+        #     raise EnvError("give at least agent_name or domain")
+        elif agent_name is not None and domain is not None:
             raise EnvError("give exactly one of agent_name or domain")
         
         if self._add_to_name is not None:
             extra_name += f"{self._add_to_name}"
+        
+        if extra_name == "":
+            extra_name = None
+            
         return extra_name
     
     def _build_observation_spaces(self):
@@ -658,8 +674,9 @@ class MultiAgentEnv(RandomObject):
         # TODO may be coded, tests not done
         for agent_nm in self.agents: 
             this_subgrid = self._subgrids_cls['action'][agent_nm]
-            extra_name = self._get_cls_name_from_domain(agent_name=agent_nm)
-            _cls_agent_action_space = SubGridActionSpace.init_grid(gridobj=this_subgrid, extra_name=extra_name)
+            extra_name = self._get_cls_name_from_domain()
+            _cls_agent_action_space = SubGridActionSpace.init_grid(gridobj=this_subgrid,
+                                                                   extra_name=extra_name)
             self.action_spaces[agent_nm] = _cls_agent_action_space(
                 gridobj=this_subgrid,
                 agent_name=extra_name,
@@ -674,8 +691,7 @@ class MultiAgentEnv(RandomObject):
         Args:
             observation (BaseObservation): _description_
         """
-        if self.__closed:
-            raise EnvError("This environment is closed. You cannot use it anymore.")
+
         if self._cent_observation is None:
             raise EnvError(
                 "This environment is not initialized. You cannot retrieve its observation."
@@ -743,18 +759,3 @@ class MultiAgentEnv(RandomObject):
         """
         # observations are updated in reset and step methods
         return self.observations[agent]
-    
-    def close(self, return_sccess = False, print_success = True):
-        self.__closed = True
-        try:
-            self._cent_env.close()
-            if print_success:
-                print("MAEnv closed with success !")
-            if return_sccess:
-                return True
-        except Exception as e:
-            print("Something went wrong :")
-            print(e)
-            if return_sccess:
-                return False
-            
