@@ -12,17 +12,17 @@ from getting_started.grid2op.Observation.observationSpace import ObservationSpac
 from grid2op.Agent.baseAgent import BaseAgent
 from grid2op.Action.ActionSpace import ActionSpace
 
-from grid2op.Action.BaseAction import BaseAction
+from grid2op.multi_agent.subgridAction import SubGridAction, SubGridActionSpace
 
 AgentID = str
 
 LocalObservationSpace = ObservationSpace
-LocalActionSpace = ActionSpace
+LocalActionSpace = SubGridActionSpace
 
-LocalAction = BaseAction
+LocalAction = SubGridAction
 LocalObservation = BaseObservation
 
-ActionProfile = Dict[AgentID, BaseAction]
+ActionProfile = Dict[AgentID, LocalAction]
 MADict = Dict[AgentID, Any]  # TODO slit it in more things to be more precise
 
 MAAgents = Dict[AgentID, BaseAgent]
