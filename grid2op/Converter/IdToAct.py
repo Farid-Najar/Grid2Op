@@ -110,10 +110,6 @@ class IdToAct(Converter):
                 Whether you want to include the "change line status" in your action space
                 (in case the original action space allows it)
 
-            change_line_status: ``bool``
-                Whether you want to include the "change line status" in your action space
-                (in case the original action space allows it)
-
             set_topo_vect: ``bool``
                 Whether you want to include the "set_bus" in your action space
                 (in case the original action space allows it)
