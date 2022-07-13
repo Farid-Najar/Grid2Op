@@ -15,6 +15,11 @@ from grid2op.Observation import ObservationSpace, CompleteObservation
 from grid2op.multi_agent.subGridObjects import SubGridObjects
 from grid2op.multi_agent.ma_typing import ActionProfile
 
+# TODO Error raised when observations are stored.
+# python interpretor tries to delete local variables
+# like observatoins. Hence, it tries to delete the associated
+# environment (_obs_env). As a fast solution,
+# we set _obs_env to None manually.
 
 class SubGridObservation(SubGridObjects, CompleteObservation):
     # TODO NOT TESTED in general
