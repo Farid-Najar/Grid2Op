@@ -3850,7 +3850,7 @@ class GridObjects:
             res_cls._compute_pos_big_topo_cls()
             if res_cls.glop_version != grid2op.__version__:
                 res_cls.process_grid2op_compat()
-            res_cls.process_grid2op_shunt_data()
+            #res_cls.process_grid2op_shunt_data()
             # add the class in the "globals" for reuse later
             globals()[name_res] = res_cls
 

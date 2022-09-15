@@ -207,10 +207,19 @@ class MultiAgentEnv(RandomObject):
         for a in self.agents:
             self.info[a]['action_is_illegal'] = True
             self.info[a]['reason_illegal'] = copy.deepcopy(reason)
+            
+    def _handle_legal_action(self):
+        for a in self.agents:
+            self.info[a]['action_is_illegal'] = False
+            self.info[a]['reason_illegal'] = ""
 
     def _handle_ambiguous_action(self, except_tmp):
         for a in self.agents:
             self.info[a]['is_ambiguous'] = True
+            
+    def _handle_unambiguous_action(self):
+        for a in self.agents:
+            self.info[a]['is_ambiguous'] = False
 
     def _build_global_action(self, action : ActionProfile, order : list):
         # The global action is do nothing at the beginning
@@ -225,11 +234,15 @@ class MultiAgentEnv(RandomObject):
         is_legal, reason = self._cent_env._game_rules(action=proposed_action, env=self._cent_env)
         if not is_legal:
             self._handle_illegal_action(reason)
+        else:
+            self._handle_legal_action()
             
         # We check if the resulted action is ambiguous
         ambiguous, except_tmp = proposed_action.is_ambiguous()
         if ambiguous:
             self._handle_ambiguous_action(except_tmp)
+        else:
+            self._handle_unambiguous_action()
             
         if is_legal and not ambiguous :
             # If the proposed action is valid, we adopt it
